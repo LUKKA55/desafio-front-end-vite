@@ -1,27 +1,11 @@
 import { Alert, Box, Button, Paper, TextField, Typography } from "@mui/material"
 import { Controller, useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
-import { object, string } from "yup"
-import { login } from "../../features/user"
+import { login } from "../../features/user/service"
 import Loading from "../components/loading";
 import { useState } from "react";
 import { useNavigate } from "react-router"
-
-const schema = object({
-    userName: string()
-        .required("Nome é obrigatório")
-        .min(3, "Nome precisa ter minimo ${min} caracteres")
-        .max(100, "Nome com máximo de ${max} caracteres"),
-    password: string()
-        .required("Senha é obrigatória")
-        .min(6, "Nome precisa ter minimo ${min} caracteres")
-        .max(20, "Senha com máximo de ${max} caracteres"),
-})
-
-interface ILoginForm {
-    userName: string
-    password: string
-}
+import { loginSchema } from "../../features/user/schema";
 
 const Login = () => {
     const navigate = useNavigate()
@@ -32,9 +16,9 @@ const Login = () => {
     const {
         handleSubmit,
         control
-    } = useForm<ILoginForm>({ 
+    } = useForm({ 
         mode: "onBlur", 
-        resolver:  yupResolver(schema as any)
+        resolver:  yupResolver(loginSchema)
     })
 
     return (
@@ -136,7 +120,7 @@ const Login = () => {
                             setIsLoading(false)
 
                             setAlert({ 
-                                message: response.errorMessage ?? response.message, 
+                                message: response.message, 
                                 show: true, 
                                 success: response.success 
                             })

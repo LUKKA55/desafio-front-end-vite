@@ -1,11 +1,10 @@
 import { redirect } from "react-router";
+import { api } from "../api";
 
-export const authLoader = async () => {
-    const response = await fetch("http://localhost:9000/user/verify-session", {
+export const authLoader = async () =>
+    api("/user/verify-session", {
         method: "GET",
         credentials: "include"
-    });
-
-    if (!response.ok)
-        throw redirect("/login");
-}
+    }, 
+    false,
+    () => { throw redirect("/login")});
