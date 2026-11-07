@@ -108,7 +108,7 @@ const TurmaForm = ({ aberto, turmaInicial, disciplinas, professores, onFechar, o
                                     helperText={fieldState.error?.message}
                                 >
                                     {Object.entries(DIAS_SEMANA).map(([valor, nome]) => (
-                                        <MenuItem key={valor} value={valor}>
+                                        <MenuItem key={valor} value={Number(valor)}>
                                             {nome}
                                         </MenuItem>
                                     ))}
@@ -130,7 +130,7 @@ const TurmaForm = ({ aberto, turmaInicial, disciplinas, professores, onFechar, o
                                     helperText={fieldState.error?.message}
                                 >
                                     {Object.entries(TURNOS).map(([valor, nome]) => (
-                                        <MenuItem key={valor} value={valor}>
+                                        <MenuItem key={valor} value={Number(valor)}>
                                             {nome}
                                         </MenuItem>
                                     ))}

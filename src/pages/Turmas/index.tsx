@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import {
     Alert,
     Avatar,
@@ -30,8 +30,15 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded"
 import EventSeatRoundedIcon from "@mui/icons-material/EventSeatRounded"
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded"
 
-import { disciplinasMock, professoresMock, turmasMock } from "../../features/turmas/mock"
-import { DIAS_SEMANA, TURNOS, type ITurma, type ITurmaForm } from "../../features/turmas/types"
+import {
+    atualizarTurma,
+    criarTurma,
+    excluirTurma,
+    listarDisciplinas,
+    listarProfessores,
+    listarTurmas,
+} from "../../features/turmas/service"
+import { DIAS_SEMANA, TURNOS, type IDisciplina, type IProfessor, type ITurma, type ITurmaForm } from "../../features/turmas/types"
 import TurmaForm from "./TurmaForm"
 
 interface ResumoProps {
@@ -65,14 +72,27 @@ const iniciais = (nome: string) =>
         .toUpperCase()
 
 const Turmas = () => {
-    const [turmas, setTurmas] = useState<ITurma[]>(turmasMock)
+    const [turmas, setTurmas] = useState<ITurma[]>([])
+    const [disciplinas, setDisciplinas] = useState<IDisciplina[]>([])
+    const [professores, setProfessores] = useState<IProfessor[]>([])
     const [formAberto, setFormAberto] = useState(false)
     const [turmaEditando, setTurmaEditando] = useState<ITurma | null>(null)
     const [turmaExcluindo, setTurmaExcluindo] = useState<ITurma | null>(null)
     const [mensagem, setMensagem] = useState("")
+        const [erro, setErro] = useState("")
 
-    const disciplina = (id: string) => disciplinasMock.find((d) => d.id === id)
-    const professor = (id: string) => professoresMock.find((p) => p.id === id)
+    useEffect(() => {
+        Promise.all([listarTurmas(), listarDisciplinas(), listarProfessores()])
+            .then(([dadosTurmas, dadosDisciplinas, dadosProfessores]) => {
+                setTurmas(dadosTurmas)
+                setDisciplinas(dadosDisciplinas)
+                setProfessores(dadosProfessores)
+            })
+            .catch((e) => setErro(e.message))
+    }, [])
+
+    const disciplina = (id: string) => disciplinas.find((d) => d.id === id)
+    const professor = (id: string) => professores.find((p) => p.id === id)
 
     const totalVagas = turmas.reduce((soma, t) => soma + t.vagas, 0)
     const totalProfessores = new Set(turmas.map((t) => t.professorId)).size
@@ -87,22 +107,34 @@ const Turmas = () => {
         setFormAberto(true)
     }
 
-    const salvar = (dados: ITurmaForm) => {
-        if (turmaEditando) {
-            setTurmas(turmas.map((t) => (t.id === turmaEditando.id ? { ...dados, id: t.id } : t)))
-            setMensagem("Turma atualizada")
-        } else {
-            setTurmas([...turmas, { ...dados, id: crypto.randomUUID() }])
-            setMensagem("Turma cadastrada")
+    const salvar = async (dados: ITurmaForm) => {
+        try {
+            if (turmaEditando) {
+                const atualizada = await atualizarTurma(turmaEditando.id, dados)
+                setTurmas(turmas.map((t) => (t.id === atualizada.id ? atualizada : t)))
+                setMensagem("Turma atualizada")
+            } else {
+                const nova = await criarTurma(dados)
+                setTurmas([...turmas, nova])
+                setMensagem("Turma cadastrada")
+            }
+            setFormAberto(false)
+        } catch (e) {
+            setErro((e as Error).message)
         }
-        setFormAberto(false)
     }
+    
 
-    const confirmarExclusao = () => {
+    const confirmarExclusao = async () => {
         if (!turmaExcluindo) return
-        setTurmas(turmas.filter((t) => t.id !== turmaExcluindo.id))
+        try {
+            await excluirTurma(turmaExcluindo.id)
+            setTurmas(turmas.filter((t) => t.id !== turmaExcluindo.id))
+            setMensagem("Turma excluída")
+        } catch (e) {
+            setErro((e as Error).message)
+        }
         setTurmaExcluindo(null)
-        setMensagem("Turma excluída")
     }
 
     return (
@@ -221,8 +253,8 @@ const Turmas = () => {
                 <TurmaForm
                     aberto={formAberto}
                     turmaInicial={turmaEditando}
-                    disciplinas={disciplinasMock}
-                    professores={professoresMock}
+                    disciplinas={disciplinas}
+                    professores={professores}
                     onFechar={() => setFormAberto(false)}
                     onSalvar={salvar}
                 />
@@ -251,6 +283,16 @@ const Turmas = () => {
             >
                 <Alert severity="success" variant="filled" onClose={() => setMensagem("")}>
                     {mensagem}
+                </Alert>
+            </Snackbar>
+                        <Snackbar
+                open={!!erro}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                autoHideDuration={5000}
+                onClose={() => setErro("")}
+            >
+                <Alert severity="error" variant="filled" onClose={() => setErro("")}>
+                    {erro}
                 </Alert>
             </Snackbar>
         </Box>
