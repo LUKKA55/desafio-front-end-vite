@@ -14,6 +14,7 @@ import {
     useMediaQuery,
     useTheme,
 } from "@mui/material"
+import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded"
 import ClassRoundedIcon from "@mui/icons-material/ClassRounded"
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded"
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded"
@@ -27,6 +28,7 @@ const itensMenu = [
     { texto: "Início", rota: "/", icone: <HomeRoundedIcon /> },
     { texto: "Turmas", rota: "/turmas", icone: <ClassRoundedIcon /> },
     { texto: "Professores", rota: "/professores", icone: <PersonRoundedIcon /> },
+    { texto: "Alunos", rota: "/alunos", icone: <BadgeRoundedIcon /> },
 ]
 
 const LayoutPage = () => {
