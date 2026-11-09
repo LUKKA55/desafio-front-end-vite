@@ -17,10 +17,10 @@ import {
     TURNOS,
     type DiaSemana,
     type IDisciplina,
-    type IProfessor,
     type ITurmaForm,
     type Turno,
 } from "../../features/turmas/types"
+import type { IProfessor } from "../../features/professores/types"
 
 interface Props {
     aberto: boolean

@@ -1,5 +1,5 @@
 import { api } from "../api"
-import type { IDisciplina, IProfessor, ITurma, ITurmaForm } from "./types"
+import type { IDisciplina, ITurma, ITurmaForm } from "./types"
 
 export const listarTurmas = () => api<ITurma[]>("/turma")
 
@@ -19,5 +19,3 @@ export const excluirTurma = (id: string) =>
     api<void>(`/turma/${id}`, { method: "DELETE" })
 
 export const listarDisciplinas = () => api<IDisciplina[]>("/disciplina")
-
-export const listarProfessores = () => api<IProfessor[]>("/professor")

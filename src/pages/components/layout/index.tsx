@@ -16,6 +16,7 @@ import {
 } from "@mui/material"
 import ClassRoundedIcon from "@mui/icons-material/ClassRounded"
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded"
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded"
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded"
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded"
 import { NavLink, Outlet } from "react-router"
@@ -25,6 +26,7 @@ const LARGURA_MENU = 260
 const itensMenu = [
     { texto: "Início", rota: "/", icone: <HomeRoundedIcon /> },
     { texto: "Turmas", rota: "/turmas", icone: <ClassRoundedIcon /> },
+    { texto: "Professores", rota: "/professores", icone: <PersonRoundedIcon /> },
 ]
 
 const LayoutPage = () => {
