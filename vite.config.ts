@@ -6,8 +6,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:9000',
+        target: 'https://api-matriculas.vercel.app',
         rewrite: (path) => path.replace(/^\/api/, ''),
+        changeOrigin: true
       },
     },
   },

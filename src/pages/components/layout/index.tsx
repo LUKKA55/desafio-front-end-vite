@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
     AppBar,
     Avatar,
@@ -19,6 +19,8 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded"
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded"
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded"
 import { NavLink, Outlet } from "react-router"
+import { useAtom } from "jotai"
+import { loadUserAtom } from "../../../features/user/service"
 
 const LARGURA_MENU = 260
 
@@ -31,6 +33,16 @@ const LayoutPage = () => {
     const theme = useTheme()
     const telaPequena = useMediaQuery(theme.breakpoints.down("md"))
     const [menuAberto, setMenuAberto] = useState(false)
+    const [ userAtom, setUserAtom ] = useAtom(loadUserAtom)
+
+    useEffect(() => {
+        setUserAtom()
+    }, [ setUserAtom ])
+
+    const avatarUser = userAtom?.userName
+        .split(" ")
+        .map(un => un[0].toUpperCase())
+        .join()
 
     const menu = (
         <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -84,10 +96,12 @@ const LayoutPage = () => {
                         bgcolor: "rgba(255,255,255,0.06)",
                     }}
                 >
-                    <Avatar sx={{ width: 36, height: 36, bgcolor: "#334155", fontSize: 14 }}>AD</Avatar>
+                    <Avatar sx={{ width: 36, height: 36, bgcolor: "#334155", fontSize: 14 }}>
+                        {avatarUser}
+                    </Avatar>
                     <Box>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            Administrador
+                            {userAtom?.perfil}
                         </Typography>
                         <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.6)" }}>
                             Visão institucional
