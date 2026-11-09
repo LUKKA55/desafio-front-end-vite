@@ -39,6 +39,11 @@ const LayoutPage = () => {
         setUserAtom()
     }, [ setUserAtom ])
 
+    const avatarUser = userAtom?.userName
+        .split(" ")
+        .map(un => un[0].toUpperCase())
+        .join()
+
     const menu = (
         <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, px: 3, py: 3 }}>
@@ -91,7 +96,9 @@ const LayoutPage = () => {
                         bgcolor: "rgba(255,255,255,0.06)",
                     }}
                 >
-                    <Avatar sx={{ width: 36, height: 36, bgcolor: "#334155", fontSize: 14 }}>AD</Avatar>
+                    <Avatar sx={{ width: 36, height: 36, bgcolor: "#334155", fontSize: 14 }}>
+                        {avatarUser}
+                    </Avatar>
                     <Box>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
                             {userAtom?.perfil}

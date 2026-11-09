@@ -8,6 +8,7 @@ export default defineConfig({
       '/api': {
         target: 'https://api-matriculas.vercel.app',
         rewrite: (path) => path.replace(/^\/api/, ''),
+        changeOrigin: true
       },
     },
   },
