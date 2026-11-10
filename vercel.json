@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://api-matriculas.vercel.app/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://api-matriculas.vercel.app/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
