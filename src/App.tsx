@@ -6,6 +6,7 @@ import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Turmas from "./pages/Turmas"
 import Professores from "./pages/Professores"
+import Alunos from "./pages/Alunos"
 
 import { authLoader } from "./features/middleware/auth"
 import LayoutPage from "./pages/components/layout"
@@ -27,11 +28,13 @@ export const router = createBrowserRouter([
 				path: "/turmas",
 				element: <Turmas />
 			},
-						
-	
 			{
 				path: "/professores",
 				element: <Professores />
+			},
+			{
+				path: "/alunos",
+				element: <Alunos />
 			}
 		]
 	}
