@@ -35,10 +35,11 @@ import {
     criarTurma,
     excluirTurma,
     listarDisciplinas,
-    listarProfessores,
     listarTurmas,
 } from "../../features/turmas/service"
-import { DIAS_SEMANA, TURNOS, type IDisciplina, type IProfessor, type ITurma, type ITurmaForm } from "../../features/turmas/types"
+import { listarProfessores } from "../../features/professores/service"
+import { DIAS_SEMANA, TURNOS, type IDisciplina, type ITurma, type ITurmaForm } from "../../features/turmas/types"
+import type { IProfessor } from "../../features/professores/types"
 import TurmaForm from "./TurmaForm"
 
 interface ResumoProps {

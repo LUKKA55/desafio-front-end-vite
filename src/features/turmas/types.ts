@@ -5,12 +5,6 @@ export interface IDisciplina {
     cargaHoraria: number
 }
 
-export interface IProfessor {
-    id: string
-    nome: string
-    email: string
-}
-
 export type DiaSemana = 2 | 3 | 4 | 5 | 6 | 7
 export type Turno = 1 | 2 | 3
 

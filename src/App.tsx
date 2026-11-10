@@ -5,6 +5,7 @@ import Box from "@mui/material/Box"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Turmas from "./pages/Turmas"
+import Professores from "./pages/Professores"
 
 import { authLoader } from "./features/middleware/auth"
 import LayoutPage from "./pages/components/layout"
@@ -25,6 +26,12 @@ export const router = createBrowserRouter([
 			{
 				path: "/turmas",
 				element: <Turmas />
+			},
+						
+	
+			{
+				path: "/professores",
+				element: <Professores />
 			}
 		]
 	}
