@@ -7,9 +7,15 @@ import Login from "./pages/Login"
 import Turmas from "./pages/Turmas"
 import Professores from "./pages/Professores"
 import Alunos from "./pages/Alunos"
+import PortalAluno from "./pages/PortalAluno"
 
 import { authLoader } from "./features/middleware/auth"
 import LayoutPage from "./pages/components/layout"
+
+import PortalAlunoDisciplinas from "./pages/PortalAluno/Disciplinas"
+import PortalAlunoMatriculas from "./pages/PortalAluno/Matriculas"
+import PortalAlunoGrade from "./pages/PortalAluno/Grade"
+import PortalAlunoHistorico from "./pages/PortalAluno/Historico"
 
 export const router = createBrowserRouter([
 	{
@@ -35,7 +41,27 @@ export const router = createBrowserRouter([
 			{
 				path: "/alunos",
 				element: <Alunos />
-			}
+			},
+            {
+                path: "/portal-aluno",
+                element: <PortalAluno />
+            },
+            {
+   path: "/portal-aluno/disciplinas",
+   element: <PortalAlunoDisciplinas  />
+},
+{
+   path: "/portal-aluno/matriculas",
+   element: <PortalAlunoMatriculas  />
+},
+{
+   path: "/portal-aluno/grade",
+   element: <PortalAlunoGrade  />
+},
+{
+   path: "/portal-aluno/historico",
+   element: <PortalAlunoHistorico  />
+}
 		]
 	}
 ]);
