@@ -23,7 +23,7 @@ import {
 } from "@mui/material"
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { loadDisciplinaAtom, loadTurmaAtom } from "../../../features/turmas/service"
 import { loadProfessorAtom } from "../../../features/professores/service"
 import { DIAS_SEMANA, TURNOS, type ITurma } from "../../../features/turmas/types"

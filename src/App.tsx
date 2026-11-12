@@ -7,7 +7,6 @@ import Login from "./pages/Login"
 import Turmas from "./pages/Turmas"
 import Professores from "./pages/Professores"
 import Alunos from "./pages/Alunos"
-import PortalAluno from "./pages/PortalAluno"
 
 import { authLoader } from "./features/middleware/auth"
 import LayoutPage from "./pages/components/layout"
@@ -15,6 +14,7 @@ import LayoutPage from "./pages/components/layout"
 import PortalAlunoDisciplinas from "./pages/PortalAluno/Disciplinas"
 import PortalAlunoMatriculas from "./pages/PortalAluno/Matriculas"
 import PortalAlunoGrade from "./pages/PortalAluno/Grade"
+import PortalAluno from "./pages/PortalAluno/Index"
 
 export const router = createBrowserRouter([
 	{
