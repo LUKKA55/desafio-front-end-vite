@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Paper, TextField, Typography } from "@mui/material"
+import { Alert, Box, Button, IconButton, InputAdornment, Paper, TextField, Typography } from "@mui/material"
 import { Controller, useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { login } from "../../features/user/service"
@@ -6,10 +6,11 @@ import Loading from "../components/loading";
 import { useState } from "react";
 import { useNavigate } from "react-router"
 import { loginSchema } from "../../features/user/schema";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const Login = () => {
     const navigate = useNavigate()
-
+    const [showPassword, setShowPassword] = useState(false);
     const [ isLoading, setIsLoading ] = useState<boolean>(false)
     const [ alert, setAlert ] = useState<{show: boolean, message: string, success: boolean} | null>(null)
 
@@ -61,18 +62,13 @@ const Login = () => {
                         control={control}
                         name="userName"
                         render={({field, fieldState}) => 
-                            <>
-                                <TextField 
-                                    {...field} 
-                                    fullWidth 
-                                    label="Usuário" 
-                                    error={fieldState.invalid}
-                                />
-                                {
-                                    fieldState.invalid &&
-                                    <Typography color="error">{fieldState.error?.message}</Typography>
-                                }
-                            </>
+                            <TextField 
+                                {...field} 
+                                fullWidth 
+                                label="Usuário" 
+                                error={!!fieldState.error}
+                                helperText={fieldState.error?.message}
+                            />
                         }
                     />
                 </Box>
@@ -85,18 +81,28 @@ const Login = () => {
                         control={control}
                         name="password"
                         render={({field, fieldState}) => 
-                            <>
-                                <TextField 
-                                    {...field} 
-                                    fullWidth 
-                                    label="Senha" 
-                                    error={fieldState.invalid}
-                                />
-                                {
-                                    fieldState.invalid &&
-                                    <Typography color="error">{fieldState.error?.message}</Typography>
-                                }
-                            </>
+                            <TextField 
+                                {...field} 
+                                fullWidth 
+                                label="Senha" 
+                                error={!!fieldState.error}
+                                helperText={fieldState.error?.message}
+                                type={showPassword ? "text" : "password"}
+                                slotProps={{
+                                    input: {
+                                        endAdornment:
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle password visibility"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    onMouseDown={() => setShowPassword(!showPassword)}
+                                                >
+                                                    {showPassword ? <Visibility /> : <VisibilityOff />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                    }
+                                }}
+                            />
                         }
                     />
                 </Box>
