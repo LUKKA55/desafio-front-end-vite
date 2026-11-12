@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useState } from "react"
 import {
     Alert,
     Avatar,
@@ -21,28 +21,6 @@ import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded"
 import Loading from "../components/loading"
 import { useAtom } from "jotai"
 import { loadMatriculasAtom } from "../../features/matriculas/service"
-
-interface ResumoProps {
-    titulo: string
-    valor: number
-    icone: ReactNode
-}
-
-const Resumo = ({ titulo, valor, icone }: ResumoProps) => (
-    <Paper variant="outlined" sx={{ p: 2.5, display: "flex", alignItems: "center", gap: 2 }}>
-        <Avatar variant="rounded" sx={{ bgcolor: "#eef2ff", color: "primary.main", width: 48, height: 48 }}>
-            {icone}
-        </Avatar>
-        <Box>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {titulo}
-            </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                {valor}
-            </Typography>
-        </Box>
-    </Paper>
-)
 
 const iniciais = (nome: string) =>
     nome
@@ -91,11 +69,19 @@ const PortalAluno = () => {
                     mb: 3
                 }}
             >
-                <Resumo
-                    titulo="Matriculadas"
-                    valor={matriculasAtom?.length ?? 0}
-                    icone={<SchoolRoundedIcon />}
-                />
+                <Paper variant="outlined" sx={{ p: 2.5, display: "flex", alignItems: "center", gap: 2 }}>
+                    <Avatar variant="rounded" sx={{ bgcolor: "#eef2ff", color: "primary.main", width: 48, height: 48 }}>
+                        <SchoolRoundedIcon />
+                    </Avatar>
+                    <Box>
+                        <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                            Matriculadas
+                        </Typography>
+                        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                            {matriculasAtom?.length ?? 0}
+                        </Typography>
+                    </Box>
+                </Paper>
             </Box>
 
             <TableContainer component={Paper} variant="outlined">
