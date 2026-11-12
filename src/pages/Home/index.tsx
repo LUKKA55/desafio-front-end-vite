@@ -1,7 +1,7 @@
 import { Alert, Avatar, Box, Button, Chip, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material"
 import { useAtom } from "jotai"
 import { loadUserAtom } from "../../features/user/service"
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useState, type ReactNode } from "react"
 import Loading from "../components/loading"
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
