@@ -27,9 +27,11 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded"
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded"
 import EditRoundedIcon from "@mui/icons-material/EditRounded"
 
-import { atualizarAluno, criarAluno, excluirAluno, listarAlunos } from "../../features/alunos/service"
+import { atualizarAluno, criarAluno, excluirAluno, loadAlunosAtom } from "../../features/alunos/service"
 import type { IAluno, IAlunoForm } from "../../features/alunos/types"
 import AlunoForm from "./AlunoForm"
+import Loading from "../components/loading"
+import { useAtom } from "jotai"
 
 const iniciais = (nome: string) =>
     nome
@@ -40,7 +42,6 @@ const iniciais = (nome: string) =>
         .toUpperCase()
 
 const Alunos = () => {
-    const [alunos, setAlunos] = useState<IAluno[]>([])
     const [formAberto, setFormAberto] = useState(false)
     const [alunoEditando, setAlunoEditando] = useState<IAluno | null>(null)
     const [alunoExcluindo, setAlunoExcluindo] = useState<IAluno | null>(null)
@@ -48,11 +49,17 @@ const Alunos = () => {
     const [mensagem, setMensagem] = useState("")
     const [erro, setErro] = useState("")
 
-    useEffect(() => {
-        listarAlunos()
-            .then(setAlunos)
+    const [ alunosAtom, setAlunosAtom ] = useAtom(loadAlunosAtom)
+    
+    const [ isLoading, setIsLoading ] = useState<boolean>(false)
+
+   useEffect(() => {
+        setIsLoading(true)
+        Promise.all([ setAlunosAtom()])
             .catch((e) => setErro(e.message))
-    }, [])
+            .finally(() => setIsLoading(false))
+
+    }, [ setAlunosAtom ])
 
     const abrirNovo = () => {
         setAlunoEditando(null)
@@ -68,11 +75,11 @@ const Alunos = () => {
         try {
             if (alunoEditando) {
                 const atualizado = await atualizarAluno(alunoEditando.id, dados)
-                setAlunos(alunos.map((a) => (a.id === atualizado.id ? atualizado : a)))
+                setAlunosAtom(alunosAtom?.map((a) => (a.id === atualizado.id ? atualizado : a)))
                 setMensagem("Aluno atualizado")
             } else {
                 const novo = await criarAluno(dados)
-                setAlunos([...alunos, novo].sort((a, b) => a.nome.localeCompare(b.nome)))
+                setAlunosAtom([...alunosAtom as IAluno[], novo].sort((a, b) => a.nome.localeCompare(b.nome)))
                 setAlunoCadastrado(novo)
             }
             setFormAberto(false)
@@ -85,7 +92,7 @@ const Alunos = () => {
         if (!alunoExcluindo) return
         try {
             await excluirAluno(alunoExcluindo.id)
-            setAlunos(alunos.filter((a) => a.id !== alunoExcluindo.id))
+            setAlunosAtom(alunosAtom?.filter((a) => a.id !== alunoExcluindo.id))
             setMensagem("Aluno excluído")
         } catch (e) {
             setErro((e as Error).message)
@@ -133,7 +140,7 @@ const Alunos = () => {
                     </TableHead>
 
                     <TableBody>
-                        {alunos.length === 0 && (
+                        {alunosAtom?.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
                                     <Typography sx={{ fontWeight: 600 }}>Nenhum aluno cadastrado</Typography>
@@ -144,44 +151,48 @@ const Alunos = () => {
                             </TableRow>
                         )}
 
-                        {alunos.map((aluno) => (
-                            <TableRow key={aluno.id} hover>
-                                <TableCell>
-                                    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-                                        <Avatar sx={{ width: 32, height: 32, fontSize: 13, bgcolor: "#c7d2fe", color: "#3730a3" }}>
-                                            {iniciais(aluno.nome)}
-                                        </Avatar>
-                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                            {aluno.nome}
-                                        </Typography>
-                                    </Stack>
-                                </TableCell>
-                                <TableCell>{aluno.matricula}</TableCell>
-                                <TableCell>
-                                    <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-                                        <Typography variant="body2">{aluno.emailInstitucional}</Typography>
-                                        <Tooltip title="Copiar login">
-                                            <IconButton size="small" onClick={() => copiarLogin(aluno.emailInstitucional)}>
-                                                <ContentCopyRoundedIcon sx={{ fontSize: 16 }} />
+                        {
+                            
+                            !!alunosAtom &&
+                            alunosAtom.map((aluno) => (
+                                <TableRow key={aluno.id} hover>
+                                    <TableCell>
+                                        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+                                            <Avatar sx={{ width: 32, height: 32, fontSize: 13, bgcolor: "#c7d2fe", color: "#3730a3" }}>
+                                                {iniciais(aluno.nome)}
+                                            </Avatar>
+                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                {aluno.nome}
+                                            </Typography>
+                                        </Stack>
+                                    </TableCell>
+                                    <TableCell>{aluno.matricula}</TableCell>
+                                    <TableCell>
+                                        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+                                            <Typography variant="body2">{aluno.emailInstitucional}</Typography>
+                                            <Tooltip title="Copiar login">
+                                                <IconButton size="small" onClick={() => copiarLogin(aluno.emailInstitucional)}>
+                                                    <ContentCopyRoundedIcon sx={{ fontSize: 16 }} />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    </TableCell>
+                                    <TableCell>{aluno.email}</TableCell>
+                                    <TableCell align="right">
+                                        <Tooltip title="Editar">
+                                            <IconButton size="small" onClick={() => abrirEdicao(aluno)}>
+                                                <EditRoundedIcon fontSize="small" />
                                             </IconButton>
                                         </Tooltip>
-                                    </Stack>
-                                </TableCell>
-                                <TableCell>{aluno.email}</TableCell>
-                                <TableCell align="right">
-                                    <Tooltip title="Editar">
-                                        <IconButton size="small" onClick={() => abrirEdicao(aluno)}>
-                                            <EditRoundedIcon fontSize="small" />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Excluir">
-                                        <IconButton size="small" color="error" onClick={() => setAlunoExcluindo(aluno)}>
-                                            <DeleteOutlineRoundedIcon fontSize="small" />
-                                        </IconButton>
-                                    </Tooltip>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                                        <Tooltip title="Excluir">
+                                            <IconButton size="small" color="error" onClick={() => setAlunoExcluindo(aluno)}>
+                                                <DeleteOutlineRoundedIcon fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        }
                     </TableBody>
                 </Table>
             </TableContainer>
@@ -260,6 +271,7 @@ const Alunos = () => {
                     {erro}
                 </Alert>
             </Snackbar>
+            <Loading isLoading={isLoading} />
         </Box>
     )
 }

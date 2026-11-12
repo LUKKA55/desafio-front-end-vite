@@ -34,13 +34,15 @@ import {
     atualizarTurma,
     criarTurma,
     excluirTurma,
-    listarDisciplinas,
-    listarTurmas,
+    loadDisciplinaAtom,
+    loadTurmaAtom,
 } from "../../features/turmas/service"
-import { listarProfessores } from "../../features/professores/service"
 import { DIAS_SEMANA, TURNOS, type IDisciplina, type ITurma, type ITurmaForm } from "../../features/turmas/types"
 import type { IProfessor } from "../../features/professores/types"
 import TurmaForm from "./TurmaForm"
+import { useAtom } from "jotai"
+import { loadProfessorAtom } from "../../features/professores/service"
+import Loading from "../components/loading"
 
 interface ResumoProps {
     titulo: string
@@ -73,30 +75,31 @@ const iniciais = (nome: string) =>
         .toUpperCase()
 
 const Turmas = () => {
-    const [turmas, setTurmas] = useState<ITurma[]>([])
-    const [disciplinas, setDisciplinas] = useState<IDisciplina[]>([])
-    const [professores, setProfessores] = useState<IProfessor[]>([])
     const [formAberto, setFormAberto] = useState(false)
     const [turmaEditando, setTurmaEditando] = useState<ITurma | null>(null)
     const [turmaExcluindo, setTurmaExcluindo] = useState<ITurma | null>(null)
     const [mensagem, setMensagem] = useState("")
-        const [erro, setErro] = useState("")
+    const [erro, setErro] = useState("")
+    const [ isLoading, setIsLoading ] = useState<boolean>(false)
+
+    const [ professorAtom, setProfessorAtom ] = useAtom(loadProfessorAtom)
+    const [ disciplinaAtom, setDisciplinaAtom ] = useAtom(loadDisciplinaAtom)
+    const [ turmasAtom, setTurmasAtom ] = useAtom(loadTurmaAtom)
 
     useEffect(() => {
-        Promise.all([listarTurmas(), listarDisciplinas(), listarProfessores()])
-            .then(([dadosTurmas, dadosDisciplinas, dadosProfessores]) => {
-                setTurmas(dadosTurmas)
-                setDisciplinas(dadosDisciplinas)
-                setProfessores(dadosProfessores)
-            })
+        setIsLoading(true)
+
+        Promise.all([setTurmasAtom(), setProfessorAtom(), setDisciplinaAtom()])
             .catch((e) => setErro(e.message))
-    }, [])
+            .finally(() => setIsLoading(false))
 
-    const disciplina = (id: string) => disciplinas.find((d) => d.id === id)
-    const professor = (id: string) => professores.find((p) => p.id === id)
+    }, [ setTurmasAtom, setDisciplinaAtom, setProfessorAtom ])
 
-    const totalVagas = turmas.reduce((soma, t) => soma + t.vagas, 0)
-    const totalProfessores = new Set(turmas.map((t) => t.professorId)).size
+    const disciplina = (id: string) => disciplinaAtom?.find((d) => d.id === id)
+    const professor = (id: string) => professorAtom?.find((p) => p.id === id)
+
+    const totalVagas = turmasAtom?.reduce((soma, t) => soma + t.vagas, 0) ?? 0
+    const totalProfessores = new Set(turmasAtom?.map((t) => t.professorId)).size
 
     const abrirNova = () => {
         setTurmaEditando(null)
@@ -112,11 +115,11 @@ const Turmas = () => {
         try {
             if (turmaEditando) {
                 const atualizada = await atualizarTurma(turmaEditando.id, dados)
-                setTurmas(turmas.map((t) => (t.id === atualizada.id ? atualizada : t)))
+                setTurmasAtom(turmasAtom?.map((t) => (t.id === atualizada.id ? atualizada : t)))
                 setMensagem("Turma atualizada")
             } else {
                 const nova = await criarTurma(dados)
-                setTurmas([...turmas, nova])
+                setTurmasAtom([...turmasAtom as ITurma[], nova])
                 setMensagem("Turma cadastrada")
             }
             setFormAberto(false)
@@ -130,7 +133,7 @@ const Turmas = () => {
         if (!turmaExcluindo) return
         try {
             await excluirTurma(turmaExcluindo.id)
-            setTurmas(turmas.filter((t) => t.id !== turmaExcluindo.id))
+            setTurmasAtom(turmasAtom?.filter((t) => t.id !== turmaExcluindo.id))
             setMensagem("Turma excluída")
         } catch (e) {
             setErro((e as Error).message)
@@ -164,7 +167,7 @@ const Turmas = () => {
                     mb: 3,
                 }}
             >
-                <Resumo titulo="Turmas ofertadas" valor={turmas.length} icone={<ClassRoundedIcon />} />
+                <Resumo titulo="Turmas ofertadas" valor={turmasAtom?.length ?? 0} icone={<ClassRoundedIcon />} />
                 <Resumo titulo="Vagas ofertadas" valor={totalVagas} icone={<EventSeatRoundedIcon />} />
                 <Resumo titulo="Professores alocados" valor={totalProfessores} icone={<PersonRoundedIcon />} />
             </Box>
@@ -183,7 +186,7 @@ const Turmas = () => {
                     </TableHead>
 
                     <TableBody>
-                        {turmas.length === 0 && (
+                        {turmasAtom?.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
                                     <Typography sx={{ fontWeight: 600 }}>Nenhuma turma cadastrada</Typography>
@@ -194,58 +197,61 @@ const Turmas = () => {
                             </TableRow>
                         )}
 
-                        {turmas.map((turma) => {
-                            const d = disciplina(turma.disciplinaId)
-                            const p = professor(turma.professorId)
+                        {
+                            !!turmasAtom &&
+                            turmasAtom?.map((turma) => {
+                                const d = disciplina(turma.disciplinaId)
+                                const p = professor(turma.professorId)
 
-                            return (
-                                <TableRow key={turma.id} hover>
-                                    <TableCell>
-                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                            {d?.nome ?? "-"}
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                                            {d?.codigo}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-                                            <Avatar sx={{ width: 32, height: 32, fontSize: 13, bgcolor: "#c7d2fe", color: "#3730a3" }}>
-                                                {p ? iniciais(p.nome) : "?"}
-                                            </Avatar>
-                                            <Typography variant="body2">{p?.nome ?? "-"}</Typography>
-                                        </Stack>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                                            <Chip
-                                                label={`${turma.diaSemana}${turma.turno}`}
-                                                size="small"
-                                                color="primary"
-                                                sx={{ fontWeight: 700 }}
-                                            />
-                                            <Typography variant="body2">
-                                                {DIAS_SEMANA[turma.diaSemana]} · {TURNOS[turma.turno]}
+                                return (
+                                    <TableRow key={turma.id} hover>
+                                        <TableCell>
+                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                {d?.nome ?? "-"}
                                             </Typography>
-                                        </Stack>
-                                    </TableCell>
-                                    <TableCell>{turma.semestre}</TableCell>
-                                    <TableCell align="right">{turma.vagas}</TableCell>
-                                    <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                                        <Tooltip title="Editar">
-                                            <IconButton size="small" onClick={() => abrirEdicao(turma)}>
-                                                <EditRoundedIcon fontSize="small" />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="Excluir">
-                                            <IconButton size="small" color="error" onClick={() => setTurmaExcluindo(turma)}>
-                                                <DeleteOutlineRoundedIcon fontSize="small" />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </TableCell>
-                                </TableRow>
-                            )
-                        })}
+                                            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                                                {d?.codigo}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+                                                <Avatar sx={{ width: 32, height: 32, fontSize: 13, bgcolor: "#c7d2fe", color: "#3730a3" }}>
+                                                    {p ? iniciais(p.nome) : "?"}
+                                                </Avatar>
+                                                <Typography variant="body2">{p?.nome ?? "-"}</Typography>
+                                            </Stack>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                                                <Chip
+                                                    label={`${turma.diaSemana}${turma.turno}`}
+                                                    size="small"
+                                                    color="primary"
+                                                    sx={{ fontWeight: 700 }}
+                                                />
+                                                <Typography variant="body2">
+                                                    {DIAS_SEMANA[turma.diaSemana]} · {TURNOS[turma.turno]}
+                                                </Typography>
+                                            </Stack>
+                                        </TableCell>
+                                        <TableCell>{turma.semestre}</TableCell>
+                                        <TableCell align="right">{turma.vagas}</TableCell>
+                                        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                                            <Tooltip title="Editar">
+                                                <IconButton size="small" onClick={() => abrirEdicao(turma)}>
+                                                    <EditRoundedIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Excluir">
+                                                <IconButton size="small" color="error" onClick={() => setTurmaExcluindo(turma)}>
+                                                    <DeleteOutlineRoundedIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
+                                    </TableRow>
+                                )
+                            })
+                        }
                     </TableBody>
                 </Table>
             </TableContainer>
@@ -254,8 +260,8 @@ const Turmas = () => {
                 <TurmaForm
                     aberto={formAberto}
                     turmaInicial={turmaEditando}
-                    disciplinas={disciplinas}
-                    professores={professores}
+                    disciplinas={disciplinaAtom as IDisciplina[]}
+                    professores={professorAtom as IProfessor[]}
                     onFechar={() => setFormAberto(false)}
                     onSalvar={salvar}
                 />
@@ -286,7 +292,7 @@ const Turmas = () => {
                     {mensagem}
                 </Alert>
             </Snackbar>
-                        <Snackbar
+            <Snackbar
                 open={!!erro}
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 autoHideDuration={5000}
@@ -296,6 +302,7 @@ const Turmas = () => {
                     {erro}
                 </Alert>
             </Snackbar>
+            <Loading isLoading={isLoading} />
         </Box>
     )
 }

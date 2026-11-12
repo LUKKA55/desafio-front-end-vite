@@ -31,12 +31,13 @@ import {
     atualizarProfessor,
     criarProfessor,
     excluirProfessor,
-    listarProfessores,
+    loadProfessorAtom,
 } from "../../features/professores/service"
 import type { IProfessor, IProfessorForm } from "../../features/professores/types"
-import { listarTurmas } from "../../features/turmas/service"
-import type { ITurma } from "../../features/turmas/types"
 import ProfessorForm from "./ProfessorForm"
+import { useAtom } from "jotai"
+import Loading from "../components/loading"
+import { loadTurmaAtom } from "../../features/turmas/service"
 
 const iniciais = (nome: string) =>
     nome
@@ -47,24 +48,26 @@ const iniciais = (nome: string) =>
         .toUpperCase()
 
 const Professores = () => {
-    const [professores, setProfessores] = useState<IProfessor[]>([])
-    const [turmas, setTurmas] = useState<ITurma[]>([])
     const [formAberto, setFormAberto] = useState(false)
     const [professorEditando, setProfessorEditando] = useState<IProfessor | null>(null)
     const [professorExcluindo, setProfessorExcluindo] = useState<IProfessor | null>(null)
     const [mensagem, setMensagem] = useState("")
     const [erro, setErro] = useState("")
 
+    const [ isLoading, setIsLoading ] = useState<boolean>(false)
+    const [ professorAtom, setProfessorAtom ] = useAtom(loadProfessorAtom)
+    const [ turmaAtom, setTurmaAtom ] = useAtom(loadTurmaAtom)
+    
     useEffect(() => {
-        Promise.all([listarProfessores(), listarTurmas()])
-            .then(([dadosProfessores, dadosTurmas]) => {
-                setProfessores(dadosProfessores)
-                setTurmas(dadosTurmas)
-            })
-            .catch((e) => setErro(e.message))
-    }, [])
+        setIsLoading(true)
 
-    const totalTurmas = (id: string) => turmas.filter((t) => t.professorId === id).length
+        Promise.all([setTurmaAtom(), setProfessorAtom()])
+            .catch((e) => setErro(e.message))
+            .finally(() => setIsLoading(false))
+
+    }, [ setTurmaAtom, setProfessorAtom ])
+
+    const totalTurmas = (id: string) => turmaAtom?.filter((t) => t.professorId === id).length ?? 0
 
     const abrirNovo = () => {
         setProfessorEditando(null)
@@ -80,11 +83,11 @@ const Professores = () => {
         try {
             if (professorEditando) {
                 const atualizado = await atualizarProfessor(professorEditando.id, dados)
-                setProfessores(professores.map((p) => (p.id === atualizado.id ? atualizado : p)))
+                setProfessorAtom(professorAtom?.map((p) => (p.id === atualizado.id ? atualizado : p)))
                 setMensagem("Professor atualizado")
             } else {
                 const novo = await criarProfessor(dados)
-                setProfessores([...professores, novo])
+                setProfessorAtom([...professorAtom as IProfessor[], novo])
                 setMensagem("Professor cadastrado")
             }
             setFormAberto(false)
@@ -97,7 +100,7 @@ const Professores = () => {
         if (!professorExcluindo) return
         try {
             await excluirProfessor(professorExcluindo.id)
-            setProfessores(professores.filter((p) => p.id !== professorExcluindo.id))
+            setProfessorAtom(professorAtom?.filter((p) => p.id !== professorExcluindo.id))
             setMensagem("Professor excluído")
         } catch (e) {
             setErro((e as Error).message)
@@ -135,7 +138,7 @@ const Professores = () => {
                     </TableHead>
 
                     <TableBody>
-                        {professores.length === 0 && (
+                        {professorAtom?.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={4} align="center" sx={{ py: 6 }}>
                                     <Typography sx={{ fontWeight: 600 }}>Nenhum professor cadastrado</Typography>
@@ -146,7 +149,7 @@ const Professores = () => {
                             </TableRow>
                         )}
 
-                        {professores.map((professor) => {
+                        {professorAtom?.map((professor) => {
                             const quantidade = totalTurmas(professor.id)
 
                             return (
@@ -241,6 +244,7 @@ const Professores = () => {
                     {erro}
                 </Alert>
             </Snackbar>
+            <Loading isLoading={isLoading} />
         </Box>
     )
 }

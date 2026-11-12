@@ -1,6 +1,7 @@
 export const api = async <T>(caminho: string, opcoes?: RequestInit, returnJson: boolean = true, actionWhenNotOk?: () => null): Promise<T> => {
     const resposta = await fetch(`/api${caminho}`, {
         ...opcoes,
+        credentials: "include", 
         headers: { "Content-Type": "application/json" },
     })
 

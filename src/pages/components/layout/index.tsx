@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
     AppBar,
     Avatar,
     Box,
+    Button,
     Drawer,
     IconButton,
     List,
@@ -20,46 +21,46 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded"
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded"
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded"
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded"
-import { NavLink, Outlet } from "react-router"
+import { NavLink, Outlet, useNavigate } from "react-router"
 import { useAtom } from "jotai"
-import { loadUserAtom } from "../../../features/user/service"
+import { loadUserAtom, logout, userAtom } from "../../../features/user/service"
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded"
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded"
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded"
-
+import { resetTudoAtom } from "../../../features/utils/resetAtom"
+import { RESET } from "jotai/utils"
 
 const LARGURA_MENU = 260
 
 const itensMenu = [
     { texto: "Início", rota: "/", icone: <HomeRoundedIcon /> },
-    { texto: "Turmas", rota: "/turmas", icone: <ClassRoundedIcon /> },
-    { texto: "Professores", rota: "/professores", icone: <PersonRoundedIcon /> },
-    { texto: "Alunos", rota: "/alunos", icone: <BadgeRoundedIcon /> },
-
-    { texto: "Portal do Aluno", rota: "/portal-aluno", icone: <SchoolRoundedIcon /> },
-
-    { texto: "Início Aluno", rota: "/portal-aluno", icone: <HomeRoundedIcon />, submenu: true },
-
-    { texto: "Disciplinas Ofertadas", rota: "/portal-aluno/disciplinas", icone: <MenuBookRoundedIcon />, submenu: true },
-
-    { texto: "Minhas Matrículas", rota: "/portal-aluno/matriculas", icone: <CheckCircleRoundedIcon />, submenu: true },
-
-    { texto: "Minha Grade", rota: "/portal-aluno/grade", icone: <CalendarMonthRoundedIcon />, submenu: true },
-
-    { texto: "Histórico", rota: "/portal-aluno/historico", icone: <SchoolRoundedIcon />, submenu: true },
+    { texto: "Turmas", rota: "/turmas", icone: <ClassRoundedIcon />, onlyAdmin: true },
+    { texto: "Professores", rota: "/professores", icone: <PersonRoundedIcon />, onlyAdmin: true },
+    { texto: "Alunos", rota: "/alunos", icone: <BadgeRoundedIcon />, onlyAdmin: true },
+    { texto: "Portal do Aluno", rota: "/portal-aluno-father", icone: <SchoolRoundedIcon />,
+        subMenus: [
+            { texto: "Início Aluno", rota: "/portal-aluno", icone: <HomeRoundedIcon /> },
+            { texto: "Disciplinas Ofertadas", rota: "/portal-aluno/disciplinas", icone: <MenuBookRoundedIcon /> },
+            { texto: "Minhas Matrículas", rota: "/portal-aluno/matriculas", icone: <CheckCircleRoundedIcon /> },
+            { texto: "Minha Grade", rota: "/portal-aluno/grade", icone: <CalendarMonthRoundedIcon /> },
+        ] },
 ]
 
 const LayoutPage = () => {
     const theme = useTheme()
     const telaPequena = useMediaQuery(theme.breakpoints.down("md"))
     const [menuAberto, setMenuAberto] = useState(false)
-    const [ userAtom, setUserAtom ] = useAtom(loadUserAtom)
+    const [ userStateAtom, setUserStateAtom ] = useAtom(loadUserAtom)
+    const [ __, setReset ] = useAtom(userAtom)
+
+    const [ _, setResetAtom ] = useAtom(resetTudoAtom)
+    const navigate = useNavigate()
 
     useEffect(() => {
-        setUserAtom()
-    }, [ setUserAtom ])
+        setUserStateAtom()
+    }, [ setUserStateAtom ])
 
-    const avatarUser = userAtom?.userName
+    const avatarUser = userStateAtom?.userName
         .split(" ")
         .map(un => un[0].toUpperCase())
         .join()
@@ -83,32 +84,65 @@ const LayoutPage = () => {
             </Typography>
 
             <List sx={{ px: 1.5 }}>
-                {itensMenu.map((item) => (
-                    <ListItemButton
-                        key={item.rota}
-                        component={NavLink}
-                        to={item.rota}
-                        end={item.rota}
-                        onClick={() => setMenuAberto(false)}
-                        sx={{
-                            borderRadius: 2,
-                            mb: 0.5,
-                            pl: item.submenu ? 6 : 2,
-                            color: "rgba(255,255,255,0.75)",
-                            "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
-                            "&.active": { bgcolor: "primary.main", color: "#fff" },
-                            "&.active:hover": { bgcolor: "primary.dark" },
-                        }}
-                    >
-                        <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>{item.icone}</ListItemIcon>
-                        <ListItemText
-    primary={item.texto}
-    primaryTypographyProps={{
-        fontSize: item.submenu ? "0.9rem" : "1rem"
-    }}
-/>
-                    </ListItemButton>
-                ))}
+                {
+                    !!userStateAtom &&
+                    itensMenu.map((item) => {
+                        if(item.onlyAdmin && !userStateAtom.isAdmin)
+                            return
+
+                        return <React.Fragment
+                            key={item.rota}
+                        >
+                            <ListItemButton
+                                component={NavLink}
+                                to={!!item.subMenus ? item.subMenus[0].rota : item.rota}
+                                onClick={() => setMenuAberto(false)}
+                                sx={{
+                                    borderRadius: 2,
+                                    mb: 0.5,
+                                    color: "rgba(255,255,255,0.75)",
+                                    pl: 2,
+                                    "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
+                                    "&.active": { bgcolor: "primary.main", color: "#fff" },
+                                    "&.active:hover": { bgcolor: "primary.dark" },
+                                }}
+                            >
+                                <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>{item.icone}</ListItemIcon>
+                                <ListItemText primary={item.texto} />
+                            </ListItemButton>
+                            {
+                                !!item.subMenus &&
+                                <List>
+                                    {           
+                                        item.subMenus?.map(sm => {
+                                            return (
+                                                <ListItemButton
+                                                    key={sm.rota}
+                                                    component={NavLink}
+                                                    to={sm.rota}
+                                                    end={sm.rota === item.subMenus![0].rota}
+                                                    onClick={() => setMenuAberto(false)}
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        mb: 0.5,
+                                                        pl: 6,
+                                                        color: "rgba(255,255,255,0.75)",
+                                                        "&:hover": { bgcolor: "rgba(255,255,255,0.08)" },
+                                                        "&.active": { bgcolor: "primary.main", color: "#fff" },
+                                                        "&.active:hover": { bgcolor: "primary.dark" },
+                                                    }}
+                                                >
+                                                    <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>{sm.icone}</ListItemIcon>
+                                                    <ListItemText primary={sm.texto}  sx={{ fontSize: "0.9rem" }} />
+                                                </ListItemButton>
+                                            )
+                                        })
+                                    }
+                                </List>
+                            }
+                        </React.Fragment>
+                    })
+                }
             </List>
 
             <Box sx={{ mt: "auto", p: 2 }}>
@@ -127,12 +161,30 @@ const LayoutPage = () => {
                     </Avatar>
                     <Box>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {userAtom?.perfil}
+                            {userStateAtom?.perfil}
                         </Typography>
                         <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.6)" }}>
-                            Visão institucional
+                            {userStateAtom?.isAdmin ? "Visão institucional" : userStateAtom?.userName }
                         </Typography>
                     </Box>
+                </Box>
+                <Box
+                    sx={{
+                        mt: 1,
+                        display: "flex",
+                        justifyContent: "center"
+                    }}
+                >
+                    <Button 
+                        onClick={async() => {
+                            await logout()
+                            setResetAtom()
+                            setReset(RESET)
+                            navigate("/login")
+                        }}  
+                    >
+                        Sair
+                    </Button>
                 </Box>
             </Box>
         </Box>

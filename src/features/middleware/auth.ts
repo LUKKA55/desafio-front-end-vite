@@ -1,10 +1,21 @@
 import { redirect } from "react-router";
 import { api } from "../api";
 
-export const authLoader = async () =>
-    api("/user/verify-session", {
-        method: "GET",
-        credentials: "include"
-    }, 
-    false,
-    () => { throw redirect("/login")});
+let ultimaValidacao = 0
+const INTERVALO = 180_000 // 3min
+
+export const authLoader = async () => {
+    const agora = Date.now()
+
+    if (agora - ultimaValidacao >= INTERVALO) {
+        await api(
+            "/user/verify-session",
+            {},
+            false,
+            () => { throw redirect("/login") }
+        )
+        ultimaValidacao = Date.now()
+    }
+
+    return null
+}

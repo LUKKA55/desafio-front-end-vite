@@ -1,7 +1,25 @@
+import { atom } from "jotai"
 import { api } from "../api"
 import type { IAluno, IAlunoForm } from "./types"
+import { atomWithReset } from "jotai/utils"
 
-export const listarAlunos = () => api<IAluno[]>("/aluno")
+export const alunosAtom = atomWithReset<IAluno[] | null>(null)
+
+export const loadAlunosAtom = atom(
+    (get) => get(alunosAtom),
+    async (_get, set, novo?: IAluno[] | null) => {
+        if (novo !== undefined) {
+            set(alunosAtom, novo) 
+            return
+        }
+
+        if (_get(alunosAtom) !== null) 
+            return
+
+        set(alunosAtom, await listarAlunos())
+})
+
+const listarAlunos = () => api<IAluno[]>("/aluno")
 
 export const criarAluno = (aluno: IAlunoForm) =>
     api<IAluno>("/aluno", {

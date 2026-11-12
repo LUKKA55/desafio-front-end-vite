@@ -15,7 +15,6 @@ import LayoutPage from "./pages/components/layout"
 import PortalAlunoDisciplinas from "./pages/PortalAluno/Disciplinas"
 import PortalAlunoMatriculas from "./pages/PortalAluno/Matriculas"
 import PortalAlunoGrade from "./pages/PortalAluno/Grade"
-import PortalAlunoHistorico from "./pages/PortalAluno/Historico"
 
 export const router = createBrowserRouter([
 	{
@@ -25,6 +24,7 @@ export const router = createBrowserRouter([
 	{
 		element: <LayoutPage />,
 		loader: authLoader,
+		shouldRevalidate: () => true,
 		children: [
 			{
 				path: "/",
@@ -47,21 +47,17 @@ export const router = createBrowserRouter([
                 element: <PortalAluno />
             },
             {
-   path: "/portal-aluno/disciplinas",
-   element: <PortalAlunoDisciplinas  />
-},
-{
-   path: "/portal-aluno/matriculas",
-   element: <PortalAlunoMatriculas  />
-},
-{
-   path: "/portal-aluno/grade",
-   element: <PortalAlunoGrade  />
-},
-{
-   path: "/portal-aluno/historico",
-   element: <PortalAlunoHistorico  />
-}
+				path: "/portal-aluno/disciplinas",
+				element: <PortalAlunoDisciplinas  />
+			},
+			{
+				path: "/portal-aluno/matriculas",
+				element: <PortalAlunoMatriculas  />
+			},
+			{
+			path: "/portal-aluno/grade",
+				element: <PortalAlunoGrade  />
+			}
 		]
 	}
 ]);
